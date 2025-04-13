@@ -1,5 +1,24 @@
-import { createApp } from 'vue'
-import './style.css'
-import App from './App.vue'
+import { createApp } from 'vue';
+import App from './App.vue';
+import './style.css';
 
-createApp(App).mount('#app')
+// Global error handling
+window.addEventListener('error', (event) => {
+  console.error('Caught in global error handler:', event.error);
+});
+
+try {
+  console.log('Starting Vue app');
+  const app = createApp(App);
+  app.mount('#app');
+  console.log('Vue app mounted');
+} catch (error: any) {
+  console.error('Failed to start Vue app:', error);
+  // Show error on page
+  document.body.innerHTML = `
+    <div style="padding: 20px; font-family: Arial;">
+      <h2>Error Starting Application</h2>
+      <p>${error.message}</p>
+    </div>
+  `;
+}
