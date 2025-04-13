@@ -50,9 +50,6 @@ const backgroundStyle = computed(() => {
 // Handle folder selection
 const handleLoadFolder = async (files: FileList) => {
   await loadMusicFolder(files);
-  if (currentSong.value) {
-    await playSong(currentSong.value);
-  }
 };
 
 // Handle song selection from playlist
@@ -64,6 +61,24 @@ const handleSelectSong = async (song: File) => {
 // Toggle playlist visibility
 const togglePlaylist = () => {
   showPlaylist.value = !showPlaylist.value;
+};
+
+const openFolderPicker = () => {
+  // Create a file input element
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.webkitdirectory = true;
+  
+  // Add change listener
+  input.onchange = (event) => {
+    const files = (event.target as HTMLInputElement).files;
+    if (files) {
+      handleLoadFolder(files);
+    }
+  };
+  
+  // Trigger click
+  input.click();
 };
 </script>
 
@@ -120,6 +135,7 @@ const togglePlaylist = () => {
           @next="playNext"
           @seek="seek"
           @update:volume="setVolume"
+          @select-folder="openFolderPicker"
         />
       </div>
     </div>
