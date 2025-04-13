@@ -1,22 +1,28 @@
-import { ref, computed } from 'vue';
+import { ref } from 'vue'; 
 import { useMediaMetadata } from './useMediaMetadata';
+import type { Song, ElectronFile } from '../types/electron';
 
 export function usePlaylist() {
   const { processFiles } = useMediaMetadata();
   
-  const playlist = ref<File[]>([]);
-  const currentSong = ref<File | null>(null);
+  const playlist = ref<Song[]>([]);
+  const currentSong = ref<Song | null>(null);
   const isLoading = ref(false);
   const musicLoaded = ref(false);
   
-  // Handle folder selection
-  const loadMusicFolder = async (files: FileList | null) => {
-    if (!files) return;
+  // Handle folder selection - update to accept File array
+  const loadMusicFolder = async (files: ElectronFile[] | FileList) => {
+    const audioFiles = Array.isArray(files) ? files : Array.from(files);
     
     isLoading.value = true;
-    const audioFiles = Array.from(files);
     
-    playlist.value = await processFiles(audioFiles);
+    const processedFiles = await processFiles(audioFiles);
+    
+    // Convert to Song objects
+    playlist.value = processedFiles.map(file => ({
+      file: file as ElectronFile,
+      metadata: (file as any).metadata
+    }));
     
     if (playlist.value.length > 0) {
       currentSong.value = playlist.value[0];
@@ -27,7 +33,7 @@ export function usePlaylist() {
     return playlist.value;
   };
   
-  // Get next song in playlist
+  // Update other methods to use Song objects
   const getNextSong = () => {
     if (!currentSong.value || playlist.value.length <= 1) return currentSong.value;
     
@@ -36,7 +42,6 @@ export function usePlaylist() {
     return playlist.value[nextIndex];
   };
   
-  // Get previous song in playlist
   const getPreviousSong = () => {
     if (!currentSong.value || playlist.value.length <= 1) return currentSong.value;
     
@@ -45,8 +50,8 @@ export function usePlaylist() {
     return playlist.value[previousIndex];
   };
   
-  // Select a song from playlist
-  const selectSong = (song: File) => {
+  // Update to accept Song object
+  const selectSong = (song: Song) => {
     currentSong.value = song;
     return currentSong.value;
   };

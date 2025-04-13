@@ -3,16 +3,10 @@ import { toRefs, computed } from 'vue';
 import ProgressBar from './ProgressBar.vue';
 import SongControls from './SongControls.vue';
 import VolumeControl from './VolumeControl.vue';
-
-interface SongFile extends File {
-  metadata?: {
-    title?: string;
-    artist?: string;
-  };
-}
+import type { Song } from '../types/electron';
 
 const props = defineProps<{
-  currentSong: SongFile | null;
+  currentSong: Song | null;
   isPlaying: boolean;
   volume: number;
   currentTime: string;
@@ -22,13 +16,13 @@ const props = defineProps<{
   musicLoaded: boolean;
 }>();
 
-const emit = defineEmits<{
+defineEmits<{
   previous: [];
   togglePlay: [];
   next: [];
   seek: [percentage: number];
   'update:volume': [value: number];
-  'select-folder': []; // New emit event for selecting folder
+  'select-folder': [];
 }>();
 
 const { 

@@ -6,7 +6,7 @@ const props = defineProps<{
   lightTheme?: boolean;
 }>();
 
-const emit = defineEmits<{
+defineEmits<{
   'update:volume': [value: number];
 }>();
 

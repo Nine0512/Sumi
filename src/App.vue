@@ -4,6 +4,11 @@ import PlaylistSidebar from './components/PlaylistSidebar.vue';
 import MusicPlayer from './components/MusicPlayer.vue';
 import { useAudioPlayer } from './composables/useAudioPlayer';
 import { usePlaylist } from './composables/usePlaylist';
+import { useElectronFileSystem } from './composables/useElectronFileSystem';
+import type { ElectronFile, ElectronFileInfo, Song } from './types/electron';
+
+
+const { isElectron, selectFolder } = useElectronFileSystem();
 
 // Initialize composables
 const {
@@ -47,15 +52,21 @@ const backgroundStyle = computed(() => {
   };
 });
 
-// Handle folder selection
-const handleLoadFolder = async (files: FileList) => {
-  await loadMusicFolder(files);
+// Handle folder selection - update to accept both FileList and File arrays
+const handleLoadFolder = async (files: FileList | ElectronFile[]) => {
+  if (Array.isArray(files)) {
+    // Handle array of Files (from Electron)
+    await loadMusicFolder(files);
+  } else {
+    // Handle FileList (from web browser)
+    await loadMusicFolder(Array.from(files));
+  }
 };
 
-// Handle song selection from playlist
-const handleSelectSong = async (song: File) => {
+// Handle song selection from playlist - update to accept Song objects
+const handleSelectSong = async (song: Song) => {
   selectSong(song);
-  await playSong(song);
+  await playSong(song.file); // Pass the File object to playSong
 };
 
 // Toggle playlist visibility
@@ -63,22 +74,57 @@ const togglePlaylist = () => {
   showPlaylist.value = !showPlaylist.value;
 };
 
-const openFolderPicker = () => {
-  // Create a file input element
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.webkitdirectory = true;
-  
-  // Add change listener
-  input.onchange = (event) => {
-    const files = (event.target as HTMLInputElement).files;
-    if (files) {
-      handleLoadFolder(files);
+// Update openFolderPicker function
+const openFolderPicker = async () => {
+  if (isElectron.value) {
+    // Use Electron's folder picker
+    const result = await selectFolder();
+    if (!result.canceled && result.files.length > 0) {
+      // Convert Electron file objects to File objects
+      const fileList = await Promise.all(
+        result.files.map(async (file: ElectronFileInfo) => {
+          // For Electron, create File objects from file paths
+          const electronFile = new File([new Blob()], file.name, {
+            lastModified: file.lastModified,
+            type: getFileType(file.name)
+          }) as ElectronFile;
+          
+          // Add path property (custom for Electron)
+          electronFile.path = file.path;
+          
+          return electronFile;
+        })
+      );
+      handleLoadFolder(fileList);
     }
-  };
-  
-  // Trigger click
-  input.click();
+  } else {
+    // Use browser's file input for web version
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.webkitdirectory = true;
+    
+    input.onchange = (event) => {
+      const files = (event.target as HTMLInputElement).files;
+      if (files) {
+        handleLoadFolder(files);
+      }
+    };
+    
+    input.click();
+  }
+};
+
+const getFileType = (filename: string) => {
+  const ext = filename.split('.').pop()?.toLowerCase();
+  switch (ext) {
+    case 'mp3': return 'audio/mp3';
+    case 'flac': return 'audio/flac';
+    case 'wav': return 'audio/wav';
+    case 'ogg': return 'audio/ogg';
+    case 'm4a': return 'audio/m4a';
+    case 'aac': return 'audio/aac';
+    default: return 'audio/mp3';
+  }
 };
 </script>
 

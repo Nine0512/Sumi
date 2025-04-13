@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue';
 import { useMediaMetadata } from './useMediaMetadata';
 import { usePlaylist } from './usePlaylist';
+import type { Song, ElectronFile } from '../types/electron';
 
 export function useAudioPlayer() {
   const { formatDuration } = useMediaMetadata();
@@ -57,7 +58,10 @@ export function useAudioPlayer() {
   };
 
   // Play a specific song
-  const playSong = async (file: File) => {
+  const playSong = async (songOrFile: Song | ElectronFile) => {
+    // Check if it's a Song object or a File
+    const file = 'file' in songOrFile ? songOrFile.file : songOrFile;
+    
     initAudio(file);
     
     try {

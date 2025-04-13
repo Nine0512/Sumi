@@ -1,16 +1,8 @@
 <script setup lang="ts">
 import { toRefs } from 'vue';
+import type { Song } from '../types/electron';
 
-type Song = {
-  file: File;
-  metadata?: {
-    cover?: string;
-    title?: string;
-    artist?: string;
-    duration?: string;
-  };
-};
-
+// Update props to use Song type
 const props = defineProps<{
   playlist: Song[];
   currentSong: Song | null;
@@ -19,9 +11,10 @@ const props = defineProps<{
   musicLoaded: boolean;
 }>();
 
+// Properly type emits
 const emit = defineEmits<{
   'toggle-playlist': [];
-  'select-song': [song: File];
+  'select-song': [song: Song];
   'load-folder': [files: FileList];
 }>();
 
