@@ -50,14 +50,12 @@
       "category": "public.app-category.music",
       "target": [
         "dmg"
-      ],
-      "icon": "icons/icon.png"
+      ]
     },
     "win": {
       "target": [
         "nsis"
-      ],
-      "icon": "icons/icon.png"
+      ]
     },
     "linux": {
       "target": [
@@ -65,7 +63,7 @@
         "deb"
       ],
       "category": "Audio",
-      "icon": "icons/icon.png"
+      "icon": "public/icons/icon.png"
     }
   }
 }
