@@ -92,7 +92,7 @@ const handleFolderInput = (event: Event) => {
               : (musicLoaded ? 'hover:bg-white/10' : 'hover:bg-gray-100')
           ]">
             <div class="w-10 h-10 rounded overflow-hidden flex-shrink-0 mr-3">
-              <img :src="song.metadata?.cover || '/path/to/default-cover.jpg'" alt="Cover"
+              <img :src="song.metadata?.cover" alt="Cover"
                 class="w-full h-full object-cover" />
             </div>
             <div class="flex-1 min-w-0">

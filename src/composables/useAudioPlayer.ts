@@ -35,7 +35,7 @@ export function useAudioPlayer() {
     
     // Set cover image
     const metadata = (file as any).metadata || {};
-    coverImage.value = metadata.cover || '/path/to/default-cover.jpg';
+    coverImage.value = metadata.cover;
     
     // Update duration when metadata is loaded
     audioElement.value.onloadedmetadata = () => {

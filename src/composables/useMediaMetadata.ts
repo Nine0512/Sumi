@@ -42,7 +42,7 @@ export function useMediaMetadata() {
         durationSeconds: metadata.format.duration || 0,
         cover: coverBlob
           ? URL.createObjectURL(coverBlob)
-          : '/path/to/default-cover.jpg',
+          : '',
       };
     } catch (err) {
       console.error(`Failed to parse metadata for ${file.name}`, err);
@@ -52,7 +52,7 @@ export function useMediaMetadata() {
         album: 'Unknown Album',
         duration: '0:00',
         durationSeconds: 0,
-        cover: '/path/to/default-cover.jpg',
+        cover: '',
       };
     }
   };
