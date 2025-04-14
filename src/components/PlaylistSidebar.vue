@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { toRefs } from 'vue';
+import { toRefs, computed } from 'vue';
 import type { Song } from '../types/electron';
 
 // Update props to use Song type
@@ -19,6 +19,29 @@ const emit = defineEmits<{
 }>();
 
 const { playlist, currentSong, isLoading, showPlaylist, musicLoaded } = toRefs(props);
+
+// Improved active song detection - compare by metadata properties instead of reference
+const isActiveSong = computed(() => (song: Song) => {
+  if (!currentSong.value || !song) return false;
+  
+  // Check if both songs have the same metadata properties
+  const current = currentSong.value;
+  
+  // If we have file paths (for Electron files), compare those
+  if ('file' in current && 'file' in song && 
+      'path' in current.file && 'path' in song.file) {
+    return current.file.path === song.file.path;
+  }
+  
+  // Otherwise, compare based on a combination of metadata
+  const currentMeta = current.metadata;
+  const songMeta = song.metadata;
+  
+  return currentMeta.title === songMeta.title && 
+         currentMeta.artist === songMeta.artist && 
+         currentMeta.album === songMeta.album &&
+         currentMeta.durationSeconds === songMeta.durationSeconds;
+});
 
 const handleFolderInput = (event: Event) => {
   const input = event.target as HTMLInputElement;
@@ -80,10 +103,19 @@ const handleFolderInput = (event: Event) => {
         <ul v-else class="space-y-2">
           <li v-for="(song, index) in playlist" :key="index" @click="$emit('select-song', song)" :class="[
             'flex items-center p-3 rounded-lg cursor-pointer transition-colors',
-            currentSong === song 
-              ? (musicLoaded ? 'bg-white/20' : 'bg-blue-50 border border-blue-200') 
+            isActiveSong(song)
+              ? (musicLoaded ? 'bg-white/30 shadow-lg' : 'bg-blue-50 border border-blue-200') 
               : (musicLoaded ? 'hover:bg-white/10' : 'hover:bg-gray-100')
           ]">
+            <!-- Now playing indicator for current song -->
+            <div v-if="isActiveSong(song)" class="mr-2 animate-pulse">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18V5l12-2v13"></path>
+                <circle cx="6" cy="18" r="3"></circle>
+              </svg>
+            </div>
+            
             <div class="w-10 h-10 rounded overflow-hidden flex-shrink-0 mr-3">
               <img :src="song.metadata?.cover" alt="Cover"
                 class="w-full h-full object-cover" />

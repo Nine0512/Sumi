@@ -28,7 +28,7 @@ export function usePlaylist(
     
     // Convert to Song objects
     playlist.value = processedFiles.map(file => ({
-      file: file as ElectronFile,
+      file: 'path' in file ? file as ElectronFile : file as File,
       metadata: (file as any).metadata
     }));
     

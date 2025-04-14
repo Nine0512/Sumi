@@ -103,6 +103,10 @@ export function useAudioPlayer(
   const playNext = () => {
     const nextSong = getNextSong();
     if (nextSong) {
+      // Make sure to update the currentSong reference before playing
+      if (currentSongRef) {
+        currentSongRef.value = nextSong;
+      }
       playSong(nextSong);
     }
   };
@@ -111,6 +115,10 @@ export function useAudioPlayer(
   const playPrevious = () => {
     const previousSong = getPreviousSong();
     if (previousSong) {
+      // Make sure to update the currentSong reference before playing
+      if (currentSongRef) {
+        currentSongRef.value = previousSong;
+      }
       playSong(previousSong);
     }
   };
