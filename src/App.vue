@@ -55,6 +55,7 @@ const backgroundStyle = computed(() => {
 const handleSelectFolder = async () => {
   const result = await selectFolder();
   if (!result.canceled && result.files.length > 0) {
+    isLoading.value = true;
     // Convert ElectronFileInfo objects to ElectronFile objects
     const electronFiles = await Promise.all(result.files.map(async (fileInfo) => {
       // Use Electron API to read file content
