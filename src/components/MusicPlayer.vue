@@ -34,7 +34,6 @@ const {
   playlist, isLoading
 } = toRefs(props);
 
-// Determine if we should use the light theme
 const lightTheme = computed(() => !musicLoaded.value);
 </script>
 
@@ -89,9 +88,7 @@ const lightTheme = computed(() => !musicLoaded.value);
       />
     </div>
 
-    <!-- Enhanced default display when no song is selected -->
     <div v-else class="flex flex-col items-center justify-center w-full max-w-md">
-      <!-- Loading state -->
       <div v-if="isLoading" class="flex flex-col items-center justify-center">
         <div class="w-64 h-64 mx-auto mb-8 rounded-lg overflow-hidden flex items-center justify-center animate-pulse"
              :class="musicLoaded ? 'bg-white/10' : 'bg-gray-100 border border-gray-200'">

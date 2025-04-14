@@ -2,7 +2,6 @@ export interface ElectronFile extends File {
   path: string;
 }
 
-// Interface for files returned by the Electron API
 export interface ElectronFileInfo {
   path: string;
   name: string;
@@ -36,7 +35,6 @@ export interface ElectronAPI {
   maximizeWindow: () => void;
   closeWindow: () => void;
   dragWindow: () => void;
-  // Add other electron methods as needed
 }
 
 declare global {

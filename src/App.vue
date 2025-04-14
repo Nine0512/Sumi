@@ -7,14 +7,12 @@ import MusicPlayer from './components/MusicPlayer.vue';
 import PlaylistSidebar from './components/PlaylistSidebar.vue';
 import type { Song, ElectronFile } from './types/electron';
 
-// Create shared state
 const playlist = ref<Song[]>([]);
 const currentSong = ref<Song | null>(null);
 const isLoading = ref(false);
 const musicLoaded = ref(false);
 const showPlaylist = ref(false);
 
-// Initialize composables with shared state
 const { loadMusicFolder, selectSong } = usePlaylist(
   playlist,
   currentSong,
@@ -39,7 +37,6 @@ const {
 
 const { selectFolder, readAudioFile } = useElectronFileSystem();
 
-// Background style with blur based on current cover image
 const backgroundStyle = computed(() => {
   if (musicLoaded.value && coverImage.value) {
     return {
@@ -51,40 +48,33 @@ const backgroundStyle = computed(() => {
   return {};
 });
 
-// Handle folder selection
 const handleSelectFolder = async () => {
   const result = await selectFolder();
   if (!result.canceled && result.files.length > 0) {
     isLoading.value = true;
-    // Convert ElectronFileInfo objects to ElectronFile objects
     const electronFiles = await Promise.all(result.files.map(async (fileInfo) => {
-      // Use Electron API to read file content
       const blob = await readAudioFile(fileInfo.path);
       if (!blob) {
         console.error(`Failed to read file: ${fileInfo.path}`);
         return null;
       }
       
-      // Create a File-compatible object
       const file = new File([blob], fileInfo.name, {
         lastModified: fileInfo.lastModified,
         type: getFileType(fileInfo.name)
       }) as ElectronFile;
       
-      // Add path property
       file.path = fileInfo.path;
       
       return file;
     }));
     
-    // Filter out any null values from failed file reads
     const validFiles = electronFiles.filter(file => file !== null) as ElectronFile[];
     
     await loadMusicFolder(validFiles);
   }
 };
 
-// Helper function to determine file type from extension
 function getFileType(filename: string): string {
   const ext = filename.split('.').pop()?.toLowerCase();
   switch (ext) {
@@ -98,13 +88,11 @@ function getFileType(filename: string): string {
   }
 }
 
-// Handle selecting a specific song
 const handleSelectSong = async (song: Song) => {
   selectSong(song);
   await playSong(song);
 };
 
-// Load music from Web API (for non-Electron environments)
 const handleWebFileInput = async (files: FileList) => {
   await loadMusicFolder(files);
   if (playlist.value.length > 0) {
@@ -116,14 +104,12 @@ const togglePlaylistSidebar = () => {
   showPlaylist.value = !showPlaylist.value;
 };
 
-// Handle start playback
 const handleStartPlayback = () => {
   if (playlist.value.length > 0) {
     selectSong(playlist.value[0]);
   }
 };
 
-// Window control functions
 const handleMinimize = () => {
   if (window.electron) {
     window.electron.minimizeWindow();
@@ -142,7 +128,6 @@ const handleClose = () => {
   }
 };
 
-// Add a function to handle window dragging
 const handleDragWindow = () => {
   if (window.electron) {
     window.electron.dragWindow();
@@ -152,20 +137,17 @@ const handleDragWindow = () => {
 
 <template>
   <div class="relative w-full h-screen overflow-hidden flex flex-col rounded-lg app-container">
-    <!-- Background layer with blur effect -->
     <div 
       class="absolute inset-0 transition-all duration-1000 rounded-lg"
       :class="musicLoaded ? '' : 'bg-white'"
       :style="backgroundStyle"
     ></div>
     
-    <!-- Overlay with blur and gradient -->
     <div 
       v-if="musicLoaded" 
       class="absolute inset-0 backdrop-blur-xl bg-black/50 rounded-lg"
     ></div>
 
-    <!-- Custom title bar for window dragging - now absolute positioned -->
     <div class="absolute top-0 left-0 right-0 z-30 h-10 window-title-bar flex items-center justify-between" @mousedown="handleDragWindow">
       <div class="px-4 select-none">
       </div>
@@ -203,9 +185,7 @@ const handleDragWindow = () => {
       </div>
     </div>
     
-    <!-- Content layer - add padding top to account for title bar -->
     <div class="relative z-10 flex flex-col w-full h-full pt-10">
-      <!-- Playlist Sidebar -->
       <PlaylistSidebar 
         :playlist="playlist"
         :current-song="currentSong"
@@ -217,9 +197,7 @@ const handleDragWindow = () => {
         @load-folder="handleWebFileInput"
       />
       
-      <!-- Main Content -->
       <div class="w-full h-full flex flex-col relative">
-        <!-- Menu button to show playlist - adjusted position -->
         <button 
           v-if="!showPlaylist"
           @click="togglePlaylistSidebar"
@@ -234,7 +212,6 @@ const handleDragWindow = () => {
           </svg>
         </button>
         
-        <!-- Loading indicator when sidebar is hidden - adjusted position -->
         <div v-if="isLoading" 
           class="absolute top-4 right-6 z-20 flex items-center p-2 rounded-full"
           :class="musicLoaded ? 'text-white bg-white/10' : 'text-gray-700 bg-gray-100'">
@@ -247,7 +224,6 @@ const handleDragWindow = () => {
           <span class="text-sm font-medium">Loading music...</span>
         </div>
         
-        <!-- Music Player Component -->
         <MusicPlayer
           :current-song="currentSong"
           :is-playing="isPlaying"
@@ -281,20 +257,17 @@ html, body {
   font-family: 'Inter', sans-serif;
 }
 
-/* Application container with rounded corners */
 .app-container {
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
-/* Window title bar for dragging */
 .window-title-bar {
   -webkit-app-region: drag;
   user-select: none;
 }
 
-/* Modern window buttons */
 .modern-window-btn {
   -webkit-app-region: no-drag;
   display: flex;
@@ -313,13 +286,11 @@ html, body {
   color: #333;
 }
 
-/* Special styling for close button */
 .modern-window-btn.close-btn:hover {
   background-color: #e81123;
   color: white;
 }
 
-/* Dark mode styles */
 .backdrop-blur-xl .modern-window-btn {
   color: rgba(255, 255, 255, 0.7);
 }

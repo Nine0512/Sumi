@@ -9,7 +9,6 @@ export function useAudioPlayer(
   currentSongRef?: Ref<Song | null>
 ) {
   const { formatDuration } = useMediaMetadata();
-  // Pass external refs to usePlaylist
   const { getNextSong, getPreviousSong, currentSong } = usePlaylist(
     playlist,
     currentSongRef
@@ -23,7 +22,6 @@ export function useAudioPlayer(
   const duration = ref('0:00');
   const coverImage = ref<string | null>(null);
   
-  // Computed property for progress percentage
   const progressPercentage = computed(() => {
     if (audioElement.value) {
       return (currentTimeSeconds.value / (audioElement.value.duration || 1)) * 100;
@@ -31,7 +29,6 @@ export function useAudioPlayer(
     return 0;
   });
 
-  // Initialize audio for a song
   const initAudio = (file: File) => {
     if (audioElement.value) {
       audioElement.value.pause();
@@ -42,32 +39,26 @@ export function useAudioPlayer(
     audioElement.value = new Audio(audioUrl);
     audioElement.value.volume = volume.value;
     
-    // Set cover image
     const metadata = (file as any).metadata || {};
     coverImage.value = metadata.cover;
     
-    // Update duration when metadata is loaded
     audioElement.value.onloadedmetadata = () => {
       const songDuration = audioElement.value?.duration || 0;
       duration.value = formatDuration(songDuration);
     };
     
-    // Update current time during playback
     audioElement.value.ontimeupdate = () => {
       const current = audioElement.value?.currentTime || 0;
       currentTime.value = formatDuration(current);
       currentTimeSeconds.value = current;
     };
     
-    // Handle end of song
     audioElement.value.onended = () => {
       playNext();
     };
   };
 
-  // Play a specific song
   const playSong = async (songOrFile: Song | ElectronFile) => {
-    // Check if it's a Song object or a File
     const file = 'file' in songOrFile ? songOrFile.file : songOrFile;
     
     initAudio(file);
@@ -81,7 +72,6 @@ export function useAudioPlayer(
     }
   };
 
-  // Toggle play/pause
   const togglePlayPause = async () => {
     if (!audioElement.value && currentSong.value) {
       await playSong(currentSong.value);
@@ -99,11 +89,9 @@ export function useAudioPlayer(
     }
   };
 
-  // Play next song
   const playNext = () => {
     const nextSong = getNextSong();
     if (nextSong) {
-      // Make sure to update the currentSong reference before playing
       if (currentSongRef) {
         currentSongRef.value = nextSong;
       }
@@ -111,11 +99,9 @@ export function useAudioPlayer(
     }
   };
 
-  // Play previous song
   const playPrevious = () => {
     const previousSong = getPreviousSong();
     if (previousSong) {
-      // Make sure to update the currentSong reference before playing
       if (currentSongRef) {
         currentSongRef.value = previousSong;
       }
@@ -123,14 +109,12 @@ export function useAudioPlayer(
     }
   };
 
-  // Seek to position
   const seek = (percentage: number) => {
     if (audioElement.value) {
       audioElement.value.currentTime = (percentage / 100) * (audioElement.value.duration || 0);
     }
   };
 
-  // Adjust volume
   const setVolume = (value: number) => {
     volume.value = value;
     if (audioElement.value) {

@@ -2,14 +2,12 @@ import * as musicMetadata from 'music-metadata-browser';
 import { ref } from 'vue';
 import { Buffer } from 'buffer';
 
-// Extend the Window interface to include Buffer
 declare global {
   interface Window {
     Buffer: typeof Buffer;
   }
 }
 
-// Ensure global Buffer is available
 if (typeof window !== 'undefined') {
   window.Buffer = Buffer;
 }
@@ -17,14 +15,12 @@ if (typeof window !== 'undefined') {
 export function useMediaMetadata() {
   const isLoading = ref(false);
   
-  // Format duration from seconds to MM:SS
   const formatDuration = (duration: number) => {
     const minutes = Math.floor(duration / 60);
     const seconds = Math.floor(duration % 60).toString().padStart(2, '0');
     return `${minutes}:${seconds}`;
   };
 
-  // Extract metadata from a file
   const extractMetadata = async (file: File) => {
     try {
       const arrayBuffer = await file.arrayBuffer();
@@ -57,7 +53,6 @@ export function useMediaMetadata() {
     }
   };
 
-  // Process multiple files
   const processFiles = async (files: File[]) => {
     isLoading.value = true;
     const audioFiles = files.filter(file => file.type.startsWith('audio/'));

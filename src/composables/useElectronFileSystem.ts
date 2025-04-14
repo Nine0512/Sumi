@@ -20,7 +20,6 @@ declare global {
 export function useElectronFileSystem() {
   const isElectron = ref(!!window.electronAPI);
   
-  // Select folder using Electron's dialog
   const selectFolder = async () => {
     if (!isElectron.value) {
       console.error('Not running in Electron');
@@ -35,7 +34,6 @@ export function useElectronFileSystem() {
     }
   };
   
-  // Read audio file using Electron's fs
   const readAudioFile = async (filePath: string): Promise<Blob | null> => {
     if (!isElectron.value) {
       console.error('Not running in Electron');

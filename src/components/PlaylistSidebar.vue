@@ -2,7 +2,6 @@
 import { toRefs, computed } from 'vue';
 import type { Song } from '../types/electron';
 
-// Update props to use Song type
 const props = defineProps<{
   playlist: Song[];
   currentSong: Song | null;
@@ -11,7 +10,6 @@ const props = defineProps<{
   musicLoaded: boolean;
 }>();
 
-// Properly type emits
 const emit = defineEmits<{
   'toggle-playlist': [];
   'select-song': [song: Song];
@@ -20,20 +18,16 @@ const emit = defineEmits<{
 
 const { playlist, currentSong, isLoading, showPlaylist, musicLoaded } = toRefs(props);
 
-// Improved active song detection - compare by metadata properties instead of reference
 const isActiveSong = computed(() => (song: Song) => {
   if (!currentSong.value || !song) return false;
   
-  // Check if both songs have the same metadata properties
   const current = currentSong.value;
   
-  // If we have file paths (for Electron files), compare those
   if ('file' in current && 'file' in song && 
       'path' in current.file && 'path' in song.file) {
     return current.file.path === song.file.path;
   }
   
-  // Otherwise, compare based on a combination of metadata
   const currentMeta = current.metadata;
   const songMeta = song.metadata;
   
@@ -71,7 +65,6 @@ const handleFolderInput = (event: Event) => {
         </button>
       </div>
 
-      <!-- File input for loading songs -->
       <label :class="[
         'flex items-center justify-center w-full p-3 mb-6 border rounded-lg text-sm cursor-pointer transition-colors',
         musicLoaded ? 'border-white/20 hover:bg-white/10' : 'border-gray-300 hover:bg-gray-100'
@@ -99,7 +92,6 @@ const handleFolderInput = (event: Event) => {
           </div>
         </div>
 
-        <!-- Song list -->
         <ul v-else class="space-y-2">
           <li v-for="(song, index) in playlist" :key="index" @click="$emit('select-song', song)" :class="[
             'flex items-center p-3 rounded-lg cursor-pointer transition-colors',
@@ -107,7 +99,6 @@ const handleFolderInput = (event: Event) => {
               ? (musicLoaded ? 'bg-white/30 shadow-lg' : 'bg-blue-50 border border-blue-200') 
               : (musicLoaded ? 'hover:bg-white/10' : 'hover:bg-gray-100')
           ]">
-            <!-- Now playing indicator for current song -->
             <div v-if="isActiveSong(song)" class="mr-2 animate-pulse">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

@@ -1,9 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-// Log that preload script is running
 console.log('Preload script running');
 
-// Expose protected methods to renderer
 try {
   contextBridge.exposeInMainWorld('electronAPI', {
     openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),

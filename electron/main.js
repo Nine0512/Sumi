@@ -19,17 +19,16 @@ process.on('uncaughtException', (error) => {
 let mainWindow;
 
 function createWindow() {
-  // Create the browser window
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     minWidth: 400,
     minHeight: 800,
-    frame: false, // This removes the default window frame
-    transparent: true, // This makes the window transparent
-    roundedCorners: true, // This enables rounded corners on platforms that support it
+    frame: false,
+    transparent: true,
+    roundedCorners: true,
     titleBarStyle: 'hidden',
-    show: false, // Don't show until content is ready
+    show: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -40,12 +39,10 @@ function createWindow() {
     title: 'Sumi'
   });
 
-  // Show window when content is ready (prevents white flash)
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
   });
 
-  // Load the app
   const isDev = !app.isPackaged;
   
   console.log('Running in', isDev ? 'development' : 'production', 'mode');
@@ -56,25 +53,21 @@ function createWindow() {
       mainWindow.loadURL('http://localhost:5173');
       mainWindow.webContents.openDevTools();
     } else {
-      // Try multiple possible paths for production
       let indexPath = path.join(__dirname, '../dist/index.html');
       console.log('Trying to load from:', indexPath);
       
       if (!fs.existsSync(indexPath)) {
         console.log('File not found, trying alternative path');
-        // Try alternative path in packaged app
         indexPath = path.join(process.resourcesPath, 'app.asar/dist/index.html');
         console.log('Alternative path:', indexPath);
       }
       
       if (!fs.existsSync(indexPath)) {
         console.log('Still not found, trying direct dist folder');
-        // One more attempt
         indexPath = path.join(app.getAppPath(), 'dist/index.html');
         console.log('Final attempt path:', indexPath);
       }
       
-      // Log content of dist directory to verify files
       try {
         const distPath = path.join(app.getAppPath(), 'dist');
         if (fs.existsSync(distPath)) {
@@ -86,12 +79,10 @@ function createWindow() {
         console.error('Error reading dist directory:', error);
       }
       
-      // Load the file
       mainWindow.loadFile(indexPath);
     }
   } catch (error) {
     console.error('Error loading application:', error);
-    // Show error message in app window
     mainWindow.webContents.loadURL(`data:text/html,
       <html>
         <body style="font-family: Arial; padding: 20px;">
@@ -103,18 +94,15 @@ function createWindow() {
     `);
   }
 
-  // Listen for errors
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
     console.error('Page failed to load:', errorCode, errorDescription);
   });
 
-  // Emitted when the window is closed
   mainWindow.on('closed', function () {
     mainWindow = null;
   });
 }
 
-// Create window when app is ready
 app.whenReady().then(() => {
   createWindow();
 
@@ -123,12 +111,10 @@ app.whenReady().then(() => {
   });
 });
 
-// Quit when all windows are closed
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
 });
 
-// Handle folder selection
 ipcMain.handle('dialog:openDirectory', async () => {
   const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
     properties: ['openDirectory']
@@ -138,7 +124,6 @@ ipcMain.handle('dialog:openDirectory', async () => {
     return { canceled: true, files: [] };
   }
   
-  // Get all audio files recursively
   const dir = filePaths[0];
   const audioFiles = [];
   
@@ -175,7 +160,6 @@ ipcMain.handle('dialog:openDirectory', async () => {
   }
 });
 
-// Handle reading audio file
 ipcMain.handle('file:readAudio', async (event, filePath) => {
   try {
     const buffer = fs.readFileSync(filePath);
@@ -186,7 +170,6 @@ ipcMain.handle('file:readAudio', async (event, filePath) => {
   }
 });
 
-// Add these IPC handlers to handle window control events
 ipcMain.on('minimize-window', () => {
   mainWindow.minimize();
 });
@@ -203,8 +186,5 @@ ipcMain.on('close-window', () => {
   mainWindow.close();
 });
 
-// Add this to your existing IPC handlers
 ipcMain.on('drag-window', () => {
-  // This empty handler is enough since the CSS -webkit-app-region: drag 
-  // will handle the actual dragging
 });

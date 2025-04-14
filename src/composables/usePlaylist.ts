@@ -3,7 +3,6 @@ import type { Ref } from 'vue';
 import { useMediaMetadata } from './useMediaMetadata';
 import type { Song, ElectronFile } from '../types/electron';
 
-// Add parameters to accept external state
 export function usePlaylist(
   externalPlaylist?: Ref<Song[]>,
   externalCurrentSong?: Ref<Song | null>,
@@ -12,13 +11,11 @@ export function usePlaylist(
 ) {
   const { processFiles } = useMediaMetadata();
   
-  // Use external refs if provided, otherwise create new ones
   const playlist = externalPlaylist || ref<Song[]>([]);
   const currentSong = externalCurrentSong || ref<Song | null>(null);
   const isLoading = externalIsLoading || ref(false);
   const musicLoaded = externalMusicLoaded || ref(false);
   
-  // Handle folder selection - update to accept File array
   const loadMusicFolder = async (files: ElectronFile[] | FileList) => {
     const audioFiles = Array.isArray(files) ? files : Array.from(files);
     
@@ -26,7 +23,6 @@ export function usePlaylist(
     
     const processedFiles = await processFiles(audioFiles);
     
-    // Convert to Song objects
     playlist.value = processedFiles.map(file => ({
       file: 'path' in file ? file as ElectronFile : file as File,
       metadata: (file as any).metadata
@@ -41,7 +37,6 @@ export function usePlaylist(
     return playlist.value;
   };
   
-  // Update other methods to use Song objects
   const getNextSong = () => {
     if (!currentSong.value || playlist.value.length <= 1) return currentSong.value;
     
@@ -58,7 +53,6 @@ export function usePlaylist(
     return playlist.value[previousIndex];
   };
   
-  // Update to accept Song object
   const selectSong = (song: Song) => {
     currentSong.value = song;
     return currentSong.value;
