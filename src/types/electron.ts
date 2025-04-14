@@ -30,3 +30,17 @@ export interface Song {
     cover: string;
   };
 }
+
+export interface ElectronAPI {
+  minimizeWindow: () => void;
+  maximizeWindow: () => void;
+  closeWindow: () => void;
+  dragWindow: () => void;
+  // Add other electron methods as needed
+}
+
+declare global {
+  interface Window {
+    electron: ElectronAPI;
+  }
+}

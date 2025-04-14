@@ -122,13 +122,39 @@ const handleStartPlayback = () => {
     selectSong(playlist.value[0]);
   }
 };
+
+// Window control functions
+const handleMinimize = () => {
+  if (window.electron) {
+    window.electron.minimizeWindow();
+  }
+};
+
+const handleMaximize = () => {
+  if (window.electron) {
+    window.electron.maximizeWindow();
+  }
+};
+
+const handleClose = () => {
+  if (window.electron) {
+    window.electron.closeWindow();
+  }
+};
+
+// Add a function to handle window dragging
+const handleDragWindow = () => {
+  if (window.electron) {
+    window.electron.dragWindow();
+  }
+};
 </script>
 
 <template>
-  <div class="relative w-full h-screen overflow-hidden flex flex-col">
+  <div class="relative w-full h-screen overflow-hidden flex flex-col rounded-lg app-container">
     <!-- Background layer with blur effect -->
     <div 
-      class="absolute inset-0 transition-all duration-1000"
+      class="absolute inset-0 transition-all duration-1000 rounded-lg"
       :class="musicLoaded ? '' : 'bg-white'"
       :style="backgroundStyle"
     ></div>
@@ -136,11 +162,49 @@ const handleStartPlayback = () => {
     <!-- Overlay with blur and gradient -->
     <div 
       v-if="musicLoaded" 
-      class="absolute inset-0 backdrop-blur-xl bg-black/50"
+      class="absolute inset-0 backdrop-blur-xl bg-black/50 rounded-lg"
     ></div>
+
+    <!-- Custom title bar for window dragging - now absolute positioned -->
+    <div class="absolute top-0 left-0 right-0 z-30 h-10 window-title-bar flex items-center justify-between" @mousedown="handleDragWindow">
+      <div class="px-4 select-none">
+      </div>
+      
+      <!-- Window Control Buttons -->
+      <div class="flex p-2 space-x-1 mr-2">
+        <button 
+          @click="handleMinimize" 
+          class="modern-window-btn" 
+          title="Minimize"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+        <button 
+          @click="handleMaximize" 
+          class="modern-window-btn" 
+          title="Maximize"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="1"></rect>
+          </svg>
+        </button>
+        <button 
+          @click="handleClose" 
+          class="modern-window-btn close-btn" 
+          title="Close"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
     
-    <!-- Content layer -->
-    <div class="relative z-10 flex flex-col w-full h-full">
+    <!-- Content layer - add padding top to account for title bar -->
+    <div class="relative z-10 flex flex-col w-full h-full pt-10">
       <!-- Playlist Sidebar -->
       <PlaylistSidebar 
         :playlist="playlist"
@@ -155,11 +219,11 @@ const handleStartPlayback = () => {
       
       <!-- Main Content -->
       <div class="w-full h-full flex flex-col relative">
-        <!-- Menu button to show playlist -->
+        <!-- Menu button to show playlist - adjusted position -->
         <button 
           v-if="!showPlaylist"
           @click="togglePlaylistSidebar"
-          class="absolute top-6 left-6 z-20 p-2 rounded-full"
+          class="absolute left-6 z-20 p-2 rounded-full"
           :class="musicLoaded ? 'text-white hover:bg-white/10' : 'hover:bg-gray-100'"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -170,9 +234,9 @@ const handleStartPlayback = () => {
           </svg>
         </button>
         
-        <!-- Loading indicator when sidebar is hidden -->
+        <!-- Loading indicator when sidebar is hidden - adjusted position -->
         <div v-if="isLoading" 
-          class="absolute top-6 right-6 z-20 flex items-center p-2 rounded-full"
+          class="absolute top-4 right-6 z-20 flex items-center p-2 rounded-full"
           :class="musicLoaded ? 'text-white bg-white/10' : 'text-gray-700 bg-gray-100'">
           <div class="animate-spin mr-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -215,6 +279,59 @@ html, body {
   height: 100%;
   overflow: hidden;
   font-family: 'Inter', sans-serif;
+}
+
+/* Application container with rounded corners */
+.app-container {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Window title bar for dragging */
+.window-title-bar {
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+/* Modern window buttons */
+.modern-window-btn {
+  -webkit-app-region: no-drag;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 20px;
+  background: transparent;
+  color: white;
+  transition: all 0.2s;
+}
+
+.modern-window-btn:hover {
+  background-color: rgba(150, 150, 150, 0.2);
+  color: #333;
+}
+
+/* Special styling for close button */
+.modern-window-btn.close-btn:hover {
+  background-color: #e81123;
+  color: white;
+}
+
+/* Dark mode styles */
+.backdrop-blur-xl .modern-window-btn {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.backdrop-blur-xl .modern-window-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.backdrop-blur-xl .modern-window-btn.close-btn:hover {
+  background-color: #e81123;
+  color: white;
 }
 
 .scrollbar::-webkit-scrollbar {

@@ -25,6 +25,10 @@ function createWindow() {
     height: 800,
     minWidth: 400,
     minHeight: 800,
+    frame: false, // This removes the default window frame
+    transparent: true, // This makes the window transparent
+    roundedCorners: true, // This enables rounded corners on platforms that support it
+    titleBarStyle: 'hidden',
     show: false, // Don't show until content is ready
     webPreferences: {
       nodeIntegration: false,
@@ -180,4 +184,27 @@ ipcMain.handle('file:readAudio', async (event, filePath) => {
     console.error('Error reading file:', error);
     return { success: false, error: error.message };
   }
+});
+
+// Add these IPC handlers to handle window control events
+ipcMain.on('minimize-window', () => {
+  mainWindow.minimize();
+});
+
+ipcMain.on('maximize-window', () => {
+  if (mainWindow.isMaximized()) {
+    mainWindow.unmaximize();
+  } else {
+    mainWindow.maximize();
+  }
+});
+
+ipcMain.on('close-window', () => {
+  mainWindow.close();
+});
+
+// Add this to your existing IPC handlers
+ipcMain.on('drag-window', () => {
+  // This empty handler is enough since the CSS -webkit-app-region: drag 
+  // will handle the actual dragging
 });
