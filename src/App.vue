@@ -114,6 +114,13 @@ const handleWebFileInput = async (files: FileList) => {
 const togglePlaylistSidebar = () => {
   showPlaylist.value = !showPlaylist.value;
 };
+
+// Handle start playback
+const handleStartPlayback = () => {
+  if (playlist.value.length > 0) {
+    selectSong(playlist.value[0]);
+  }
+};
 </script>
 
 <template>
@@ -162,6 +169,19 @@ const togglePlaylistSidebar = () => {
           </svg>
         </button>
         
+        <!-- Loading indicator when sidebar is hidden -->
+        <div v-if="isLoading" 
+          class="absolute top-6 right-6 z-20 flex items-center p-2 rounded-full"
+          :class="musicLoaded ? 'text-white bg-white/10' : 'text-gray-700 bg-gray-100'">
+          <div class="animate-spin mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+            </svg>
+          </div>
+          <span class="text-sm font-medium">Loading music...</span>
+        </div>
+        
         <!-- Music Player Component -->
         <MusicPlayer
           :current-song="currentSong"
@@ -172,12 +192,15 @@ const togglePlaylistSidebar = () => {
           :cover-image="coverImage"
           :progress-percentage="progressPercentage"
           :music-loaded="musicLoaded"
+          :playlist="playlist"
+          :is-loading="isLoading"
           @previous="playPrevious"
           @toggle-play="togglePlayPause"
           @next="playNext"
           @seek="seek"
           @update:volume="setVolume"
           @select-folder="handleSelectFolder"
+          @start-playback="handleStartPlayback"
         />
       </div>
     </div>
