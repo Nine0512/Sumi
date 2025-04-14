@@ -1,11 +1,19 @@
 import { ref, computed } from 'vue';
+import type { Ref } from 'vue';
 import { useMediaMetadata } from './useMediaMetadata';
 import { usePlaylist } from './usePlaylist';
 import type { Song, ElectronFile } from '../types/electron';
 
-export function useAudioPlayer() {
+export function useAudioPlayer(
+  playlist?: Ref<Song[]>,
+  currentSongRef?: Ref<Song | null>
+) {
   const { formatDuration } = useMediaMetadata();
-  const { getNextSong, getPreviousSong, currentSong } = usePlaylist();
+  // Pass external refs to usePlaylist
+  const { getNextSong, getPreviousSong, currentSong } = usePlaylist(
+    playlist,
+    currentSongRef
+  );
   
   const audioElement = ref<HTMLAudioElement | null>(null);
   const isPlaying = ref(false);

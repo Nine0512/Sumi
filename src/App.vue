@@ -1,24 +1,26 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import PlaylistSidebar from './components/PlaylistSidebar.vue';
-import MusicPlayer from './components/MusicPlayer.vue';
-import { useAudioPlayer } from './composables/useAudioPlayer';
 import { usePlaylist } from './composables/usePlaylist';
+import { useAudioPlayer } from './composables/useAudioPlayer';
 import { useElectronFileSystem } from './composables/useElectronFileSystem';
-import type { ElectronFile, ElectronFileInfo, Song } from './types/electron';
+import MusicPlayer from './components/MusicPlayer.vue';
+import PlaylistSidebar from './components/PlaylistSidebar.vue';
+import type { Song, ElectronFile } from './types/electron';
 
+// Create shared state
+const playlist = ref<Song[]>([]);
+const currentSong = ref<Song | null>(null);
+const isLoading = ref(false);
+const musicLoaded = ref(false);
+const showPlaylist = ref(false);
 
-const { isElectron, selectFolder } = useElectronFileSystem();
-
-// Initialize composables
-const {
+// Initialize composables with shared state
+const { loadMusicFolder, selectSong } = usePlaylist(
   playlist,
   currentSong,
   isLoading,
-  musicLoaded,
-  loadMusicFolder,
-  selectSong
-} = usePlaylist();
+  musicLoaded
+);
 
 const {
   isPlaying,
@@ -33,110 +35,107 @@ const {
   playPrevious,
   seek,
   setVolume
-} = useAudioPlayer();
+} = useAudioPlayer(playlist, currentSong);
 
-// UI state
-const showPlaylist = ref(true);
+const { selectFolder, readAudioFile } = useElectronFileSystem();
 
-// Background style computed property
+// Background style with blur based on current cover image
 const backgroundStyle = computed(() => {
-  if (coverImage.value && currentSong.value) {
+  if (musicLoaded.value && coverImage.value) {
     return {
       backgroundImage: `url(${coverImage.value})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
     };
   }
-  return {
-    background: 'linear-gradient(135deg, #1e293b, #0f172a)',
-  };
+  return {};
 });
 
-// Handle folder selection - update to accept both FileList and File arrays
-const handleLoadFolder = async (files: FileList | ElectronFile[]) => {
-  if (Array.isArray(files)) {
-    // Handle array of Files (from Electron)
-    await loadMusicFolder(files);
-  } else {
-    // Handle FileList (from web browser)
-    await loadMusicFolder(Array.from(files));
-  }
-};
-
-// Handle song selection from playlist - update to accept Song objects
-const handleSelectSong = async (song: Song) => {
-  selectSong(song);
-  await playSong(song.file); // Pass the File object to playSong
-};
-
-// Toggle playlist visibility
-const togglePlaylist = () => {
-  showPlaylist.value = !showPlaylist.value;
-};
-
-// Update openFolderPicker function
-const openFolderPicker = async () => {
-  if (isElectron.value) {
-    // Use Electron's folder picker
-    const result = await selectFolder();
-    if (!result.canceled && result.files.length > 0) {
-      // Convert Electron file objects to File objects
-      const fileList = await Promise.all(
-        result.files.map(async (file: ElectronFileInfo) => {
-          // For Electron, create File objects from file paths
-          const electronFile = new File([new Blob()], file.name, {
-            lastModified: file.lastModified,
-            type: getFileType(file.name)
-          }) as ElectronFile;
-          
-          // Add path property (custom for Electron)
-          electronFile.path = file.path;
-          
-          return electronFile;
-        })
-      );
-      handleLoadFolder(fileList);
-    }
-  } else {
-    // Use browser's file input for web version
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.webkitdirectory = true;
-    
-    input.onchange = (event) => {
-      const files = (event.target as HTMLInputElement).files;
-      if (files) {
-        handleLoadFolder(files);
+// Handle folder selection
+const handleSelectFolder = async () => {
+  const result = await selectFolder();
+  if (!result.canceled && result.files.length > 0) {
+    // Convert ElectronFileInfo objects to ElectronFile objects
+    const electronFiles = await Promise.all(result.files.map(async (fileInfo) => {
+      // Use Electron API to read file content
+      const blob = await readAudioFile(fileInfo.path);
+      if (!blob) {
+        console.error(`Failed to read file: ${fileInfo.path}`);
+        return null;
       }
-    };
+      
+      // Create a File-compatible object
+      const file = new File([blob], fileInfo.name, {
+        lastModified: fileInfo.lastModified,
+        type: getFileType(fileInfo.name)
+      }) as ElectronFile;
+      
+      // Add path property
+      file.path = fileInfo.path;
+      
+      return file;
+    }));
     
-    input.click();
+    // Filter out any null values from failed file reads
+    const validFiles = electronFiles.filter(file => file !== null) as ElectronFile[];
+    
+    await loadMusicFolder(validFiles);
+    if (playlist.value.length > 0) {
+      playSong(playlist.value[0]);
+    }
   }
 };
 
-const getFileType = (filename: string) => {
+// Helper function to determine file type from extension
+function getFileType(filename: string): string {
   const ext = filename.split('.').pop()?.toLowerCase();
   switch (ext) {
-    case 'mp3': return 'audio/mp3';
-    case 'flac': return 'audio/flac';
+    case 'mp3': return 'audio/mpeg';
     case 'wav': return 'audio/wav';
     case 'ogg': return 'audio/ogg';
-    case 'm4a': return 'audio/m4a';
+    case 'flac': return 'audio/flac';
+    case 'm4a': return 'audio/mp4';
     case 'aac': return 'audio/aac';
-    default: return 'audio/mp3';
+    default: return 'audio/mpeg'; // fallback
   }
+}
+
+// Handle selecting a specific song
+const handleSelectSong = async (song: Song) => {
+  selectSong(song);
+  await playSong(song);
+};
+
+// Load music from Web API (for non-Electron environments)
+const handleWebFileInput = async (files: FileList) => {
+  await loadMusicFolder(files);
+  if (playlist.value.length > 0) {
+    playSong(playlist.value[0]);
+  }
+};
+
+const togglePlaylistSidebar = () => {
+  showPlaylist.value = !showPlaylist.value;
 };
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col relative overflow-hidden">
-    <!-- Background with blur effect -->
-    <div class="absolute inset-0 z-0" :style="backgroundStyle"></div>
-    <div class="absolute inset-0 z-0" 
-         :class="[musicLoaded ? 'backdrop-blur-xl bg-black/50' : 'bg-gray-50']"></div>
-
-    <!-- Main content -->
-    <div class="z-10 flex flex-1 relative">
+  <div class="relative w-full h-screen overflow-hidden flex flex-col">
+    <!-- Background layer with blur effect -->
+    <div 
+      class="absolute inset-0 transition-all duration-1000"
+      :class="musicLoaded ? '' : 'bg-white'"
+      :style="backgroundStyle"
+    ></div>
+    
+    <!-- Overlay with blur and gradient -->
+    <div 
+      v-if="musicLoaded" 
+      class="absolute inset-0 backdrop-blur-xl bg-black/50"
+    ></div>
+    
+    <!-- Content layer -->
+    <div class="relative z-10 flex flex-col w-full h-full">
       <!-- Playlist Sidebar -->
       <PlaylistSidebar 
         :playlist="playlist"
@@ -144,30 +143,30 @@ const getFileType = (filename: string) => {
         :is-loading="isLoading"
         :show-playlist="showPlaylist"
         :music-loaded="musicLoaded"
-        @toggle-playlist="togglePlaylist"
+        @toggle-playlist="togglePlaylistSidebar"
         @select-song="handleSelectSong"
-        @load-folder="handleLoadFolder"
+        @load-folder="handleWebFileInput"
       />
-
-      <div class="flex-1 flex flex-col">
-        <!-- Header with toggle playlist button -->
-        <div class="p-6 flex items-center">
-          <button v-if="!showPlaylist" @click="togglePlaylist"
-            :class="[
-              'p-2 rounded-full transition-colors',
-              musicLoaded ? 'text-white hover:bg-white/10' : 'text-gray-800 hover:bg-gray-100'
-            ]">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-
+      
+      <!-- Main Content -->
+      <div class="w-full h-full flex flex-col relative">
+        <!-- Menu button to show playlist -->
+        <button 
+          v-if="!showPlaylist"
+          @click="togglePlaylistSidebar"
+          class="absolute top-6 left-6 z-20 p-2 rounded-full"
+          :class="musicLoaded ? 'text-white hover:bg-white/10' : 'hover:bg-gray-100'"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        
         <!-- Music Player Component -->
-        <MusicPlayer 
+        <MusicPlayer
           :current-song="currentSong"
           :is-playing="isPlaying"
           :volume="volume"
@@ -181,7 +180,7 @@ const getFileType = (filename: string) => {
           @next="playNext"
           @seek="seek"
           @update:volume="setVolume"
-          @select-folder="openFolderPicker"
+          @select-folder="handleSelectFolder"
         />
       </div>
     </div>
@@ -189,22 +188,28 @@ const getFileType = (filename: string) => {
 </template>
 
 <style>
-/* Custom scrollbar styling */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+}
+
 .scrollbar::-webkit-scrollbar {
   width: 6px;
 }
 
 .scrollbar::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
+  background: transparent;
 }
 
 .scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
+  background-color: rgba(255, 255, 255, 0.3);
   border-radius: 3px;
 }
 
-.scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.25);
+.dark .scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 </style>

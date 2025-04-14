@@ -1,12 +1,13 @@
+export interface ElectronFile extends File {
+  path: string;
+}
+
+// Interface for files returned by the Electron API
 export interface ElectronFileInfo {
   path: string;
   name: string;
   size: number;
   lastModified: number;
-}
-
-export interface ElectronFile extends File {
-  path?: string;
 }
 
 export interface SongMetadata {
@@ -19,6 +20,13 @@ export interface SongMetadata {
 }
 
 export interface Song {
-  file: ElectronFile;
-  metadata?: SongMetadata;
+  file: ElectronFile | File;
+  metadata: {
+    title: string;
+    artist: string;
+    album: string;
+    duration: string;
+    durationSeconds: number;
+    cover: string;
+  };
 }

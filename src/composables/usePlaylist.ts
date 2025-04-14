@@ -1,14 +1,22 @@
 import { ref } from 'vue'; 
+import type { Ref } from 'vue';
 import { useMediaMetadata } from './useMediaMetadata';
 import type { Song, ElectronFile } from '../types/electron';
 
-export function usePlaylist() {
+// Add parameters to accept external state
+export function usePlaylist(
+  externalPlaylist?: Ref<Song[]>,
+  externalCurrentSong?: Ref<Song | null>,
+  externalIsLoading?: Ref<boolean>,
+  externalMusicLoaded?: Ref<boolean>
+) {
   const { processFiles } = useMediaMetadata();
   
-  const playlist = ref<Song[]>([]);
-  const currentSong = ref<Song | null>(null);
-  const isLoading = ref(false);
-  const musicLoaded = ref(false);
+  // Use external refs if provided, otherwise create new ones
+  const playlist = externalPlaylist || ref<Song[]>([]);
+  const currentSong = externalCurrentSong || ref<Song | null>(null);
+  const isLoading = externalIsLoading || ref(false);
+  const musicLoaded = externalMusicLoaded || ref(false);
   
   // Handle folder selection - update to accept File array
   const loadMusicFolder = async (files: ElectronFile[] | FileList) => {

@@ -1,11 +1,12 @@
 import { ref } from 'vue';
+import type { ElectronFileInfo } from '../types/electron';
 
 declare global {
   interface Window {
     electronAPI?: {
       openDirectory: () => Promise<{
         canceled: boolean;
-        files: { path: string; name: string; size: number; lastModified: number }[];
+        files: ElectronFileInfo[];
       }>;
       readAudioFile: (path: string) => Promise<{ 
         success: boolean; 
@@ -35,7 +36,7 @@ export function useElectronFileSystem() {
   };
   
   // Read audio file using Electron's fs
-  const readAudioFile = async (filePath: string) => {
+  const readAudioFile = async (filePath: string): Promise<Blob | null> => {
     if (!isElectron.value) {
       console.error('Not running in Electron');
       return null;
