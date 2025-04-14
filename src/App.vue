@@ -80,9 +80,6 @@ const handleSelectFolder = async () => {
     const validFiles = electronFiles.filter(file => file !== null) as ElectronFile[];
     
     await loadMusicFolder(validFiles);
-    if (playlist.value.length > 0) {
-      playSong(playlist.value[0]);
-    }
   }
 };
 
