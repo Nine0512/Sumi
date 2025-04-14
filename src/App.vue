@@ -136,16 +136,16 @@ const handleDragWindow = () => {
 </script>
 
 <template>
-  <div class="relative w-full h-screen overflow-hidden flex flex-col rounded-lg app-container">
+  <div class="relative w-full h-screen overflow-hidden flex flex-col">
     <div 
-      class="absolute inset-0 transition-all duration-1000 rounded-lg"
+      class="absolute inset-0 transition-all duration-1000"
       :class="musicLoaded ? '' : 'bg-white'"
       :style="backgroundStyle"
     ></div>
     
     <div 
       v-if="musicLoaded" 
-      class="absolute inset-0 backdrop-blur-xl bg-black/50 rounded-lg"
+      class="absolute inset-0 backdrop-blur-xl bg-black/50"
     ></div>
 
     <div class="absolute top-0 left-0 right-0 z-30 h-10 window-title-bar flex items-center justify-between" @mousedown="handleDragWindow">
@@ -257,12 +257,6 @@ html, body {
   font-family: 'Inter', sans-serif;
 }
 
-.app-container {
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-}
-
 .window-title-bar {
   -webkit-app-region: drag;
   user-select: none;
@@ -277,7 +271,7 @@ html, body {
   height: 28px;
   border-radius: 20px;
   background: transparent;
-  color: white;
+  color: rgb(158, 158, 158);
   transition: all 0.2s;
 }
 
