@@ -33,7 +33,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js')
     },
     backgroundColor: '#121212',
-    title: 'Sumi Music Player'
+    title: 'Sumi'
   });
 
   // Show window when content is ready (prevents white flash)

@@ -38,7 +38,7 @@
   "main": "electron/main.js",
   "build": {
     "appId": "com.sumi.musicplayer",
-    "productName": "Sumi Music Player",
+    "productName": "Sumi",
     "files": [
       "dist/**/*",
       "electron/**/*"
